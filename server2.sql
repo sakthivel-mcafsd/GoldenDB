@@ -155,3 +155,14 @@ JOIN Services S ON B.ServiceId = S.Id
 WHERE B.UserId = @UserId
 
 END
+CREATE TABLE Services
+(
+ Id INT PRIMARY KEY IDENTITY(1,1),
+ ServiceName NVARCHAR(100)
+)
+INSERT INTO Services (ServiceName)
+VALUES 
+('Carpentry'),
+('Painting'),
+('HVAC Service')
+select * from Services
