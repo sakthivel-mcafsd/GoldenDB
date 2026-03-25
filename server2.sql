@@ -166,3 +166,47 @@ VALUES
 ('Painting'),
 ('HVAC Service')
 select * from Services
+--update booking store proceture
+ALTER PROCEDURE sp_GetMyBookings
+(
+@UserId INT
+)
+AS
+BEGIN
+
+SELECT 
+B.Id,
+S.ServiceName AS Service,
+B.Issue AS Description,
+B.ServiceDate AS Date,
+B.ServiceTime AS Time,
+B.Status,
+U.Name AS Customer
+FROM Bookings B
+JOIN Users U ON B.UserId = U.Id
+JOIN Services S ON B.ServiceId = S.Id
+WHERE B.UserId = @UserId
+
+END
+
+ALTER PROCEDURE sp_GetMyBookings
+(
+@UserId INT
+)
+AS
+BEGIN
+
+SELECT 
+B.Id,
+S.ServiceName AS Service,
+B.Issue AS Description,
+B.ServiceDate AS Date,
+B.ServiceTime AS Time,
+B.Status,
+U.Name AS Customer
+FROM Bookings B
+JOIN Users U ON B.UserId = U.Id
+JOIN Services S ON B.ServiceId = S.Id
+WHERE B.UserId = @UserId
+
+END
