@@ -1,4 +1,4 @@
-create database services
+﻿create database services
 CREATE TABLE Users
 (
     Id INT IDENTITY(1,1) PRIMARY KEY,
@@ -183,3 +183,37 @@ DELETE FROM Users
 
 ALTER TABLE Users
 ADD CONSTRAINT DF_CreatedDate DEFAULT GETDATE() FOR CreatedDate
+
+ALTER PROCEDURE dbo.sp_LoginUser
+(
+    @Email NVARCHAR(150)
+)
+AS
+BEGIN
+
+SET NOCOUNT ON;
+
+SELECT 
+    Id,
+    Name,
+    Email,
+    Role,
+    PasswordHash,
+    PasswordSalt,
+    IsEmailVerified   -- 🔥 ADD THIS LINE
+FROM dbo.Users
+WHERE Email = @Email
+
+END
+
+CREATE PROCEDURE sp_VerifyUser
+(
+    @Token NVARCHAR(200)
+)
+AS
+BEGIN
+    UPDATE Users
+    SET IsEmailVerified = 1,
+        VerificationToken = NULL
+    WHERE VerificationToken = @Token
+END
