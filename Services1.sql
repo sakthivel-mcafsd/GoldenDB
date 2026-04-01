@@ -1,100 +1,24 @@
-﻿create database services
+﻿CREATE DATABASE Services;
+GO
+
+USE Services;
+GO
+--1. User table created
 CREATE TABLE Users
 (
     Id INT IDENTITY(1,1) PRIMARY KEY,
-    Name NVARCHAR(100),
-    Email NVARCHAR(150),
-    PasswordHash VARBINARY(256),
-    PasswordSalt VARBINARY(256),
-    Role NVARCHAR(50)
-)
+    Name NVARCHAR(100) NOT NULL,
+    Email NVARCHAR(150) NOT NULL UNIQUE,  -- 🔥 UNIQUE
+    PasswordHash VARBINARY(256) NOT NULL,
+    PasswordSalt VARBINARY(256) NOT NULL,
+    Role NVARCHAR(50),
+    IsEmailVerified BIT DEFAULT 0,
+    VerificationToken NVARCHAR(200),
+    CreatedDate DATETIME DEFAULT GETDATE()
+);
 
-CREATE PROCEDURE sp_RegisterUser
-(
-    @Name NVARCHAR(100),
-    @Email NVARCHAR(150),
-    @PasswordHash VARBINARY(256),
-    @PasswordSalt VARBINARY(256),
-    @Role NVARCHAR(50)
-)
-AS
-BEGIN
-
-IF EXISTS (SELECT 1 FROM Users WHERE Email = @Email)
-BEGIN
-    RETURN 0
-END
-
-INSERT INTO Users
-(
-    Name,
-    Email,
-    PasswordHash,
-    PasswordSalt,
-    Role
-)
-VALUES
-(
-    @Name,
-    @Email,
-    @PasswordHash,
-    @PasswordSalt,
-    @Role
-)
-
-END
-select * from Users
-
-
-
-CREATE PROCEDURE dbo.sp_LoginUser
-(
-    @Email NVARCHAR(150)
-)
-AS
-BEGIN
-
-SET NOCOUNT ON;
-
-SELECT 
-    Id,
-    Email,
-    Role,
-    PasswordHash,
-    PasswordSalt
-FROM dbo.Users
-WHERE Email = @Email
-
-END
-ALTER PROCEDURE dbo.sp_LoginUser
-(
-    @Email NVARCHAR(150)
-)
-AS
-BEGIN
-
-SET NOCOUNT ON;
-
-SELECT 
-    Id,
-    Name,       -- inga Name add pannalam
-    Email,
-    Role,
-    PasswordHash,
-    PasswordSalt
-FROM dbo.Users
-WHERE Email = @Email
-
-END
-
-
-
-ALTER TABLE Users 
-ADD IsEmailVerified BIT DEFAULT 0,
-    VerificationToken NVARCHAR(200)
-
-
-ALTER PROCEDURE sp_RegisterUser
+--2. Register Stored Procedure
+CREATE OR ALTER PROCEDURE sp_RegisterUser
 (
     @Name NVARCHAR(100),
     @Email NVARCHAR(150),
@@ -105,115 +29,70 @@ ALTER PROCEDURE sp_RegisterUser
 )
 AS
 BEGIN
+    SET NOCOUNT ON;
 
-IF EXISTS (SELECT 1 FROM Users WHERE Email = @Email)
-BEGIN
-    RETURN 0
+    IF EXISTS (SELECT 1 FROM Users WHERE Email = @Email)
+    BEGIN
+        RETURN 0;
+    END
+
+    INSERT INTO Users
+    (
+        Name,
+        Email,
+        PasswordHash,
+        PasswordSalt,
+        Role,
+        IsEmailVerified,
+        VerificationToken
+    )
+    VALUES
+    (
+        @Name,
+        @Email,
+        @PasswordHash,
+        @PasswordSalt,
+        @Role,
+        0,
+        @Token
+    );
+
+    RETURN 1;
 END
 
-INSERT INTO Users
-(
-    Name,
-    Email,
-    PasswordHash,
-    PasswordSalt,
-    Role,
-    IsEmailVerified,
-    VerificationToken
-)
-VALUES
-(
-    @Name,
-    @Email,
-    @PasswordHash,
-    @PasswordSalt,
-    @Role,
-    0,
-    @Token
-)
-
-END
-
-
-ALTER PROCEDURE sp_RegisterUser
-(
-    @Name NVARCHAR(100),
-    @Email NVARCHAR(150),
-    @PasswordHash VARBINARY(256),
-    @PasswordSalt VARBINARY(256),
-    @Role NVARCHAR(50),
-    @Token NVARCHAR(200)
-)
-AS
-BEGIN
-
-SET NOCOUNT ON;
-
-IF EXISTS (SELECT 1 FROM Users WHERE Email = @Email)
-BEGIN
-    RETURN 0
-END
-
-INSERT INTO Users
-(
-    Name,
-    Email,
-    PasswordHash,
-    PasswordSalt,
-    Role,
-    IsEmailVerified,
-    VerificationToken
-)
-VALUES
-(
-    @Name,
-    @Email,
-    @PasswordHash,
-    @PasswordSalt,
-    @Role,
-    0,
-    @Token
-)
-
-RETURN 1
-
-END
-select * from Users
-DELETE FROM Users
-
-ALTER TABLE Users
-ADD CONSTRAINT DF_CreatedDate DEFAULT GETDATE() FOR CreatedDate
-
-ALTER PROCEDURE dbo.sp_LoginUser
+-- 3.Login Stored Procedure
+CREATE OR ALTER PROCEDURE sp_LoginUser
 (
     @Email NVARCHAR(150)
 )
 AS
 BEGIN
+    SET NOCOUNT ON;
 
-SET NOCOUNT ON;
-
-SELECT 
-    Id,
-    Name,
-    Email,
-    Role,
-    PasswordHash,
-    PasswordSalt,
-    IsEmailVerified   -- 🔥 ADD THIS LINE
-FROM dbo.Users
-WHERE Email = @Email
-
+    SELECT 
+        Id,
+        Name,
+        Email,
+        Role,
+        PasswordHash,
+        PasswordSalt,
+        IsEmailVerified
+    FROM Users
+    WHERE Email = @Email;
 END
 
-CREATE PROCEDURE sp_VerifyUser
+-- 4.Verify Stored Procedure
+CREATE OR ALTER PROCEDURE sp_VerifyUser
 (
     @Token NVARCHAR(200)
 )
 AS
 BEGIN
+    SET NOCOUNT ON;
+
     UPDATE Users
-    SET IsEmailVerified = 1,
+    SET 
+        IsEmailVerified = 1,
         VerificationToken = NULL
-    WHERE VerificationToken = @Token
+    WHERE VerificationToken = @Token;
 END
