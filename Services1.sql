@@ -16,7 +16,7 @@ CREATE TABLE Users
     VerificationToken NVARCHAR(200),
     CreatedDate DATETIME DEFAULT GETDATE()
 );
-
+select * from Users
 --2. Register Stored Procedure
 CREATE OR ALTER PROCEDURE sp_RegisterUser
 (
@@ -96,3 +96,4 @@ BEGIN
         VerificationToken = NULL
     WHERE VerificationToken = @Token;
 END
+update Users set Name='Parasuraman' where Id=2
